@@ -1581,7 +1581,7 @@ function JPEGEncoder(quality, predictFlag) {
 
   init()
 }
-module.exports = encode
+module.exports = { encode, encode_predict }
 
 function encode(imgData, qu, predict = 0) {
   if (typeof qu === 'undefined') qu = 50
@@ -1593,7 +1593,9 @@ function encode(imgData, qu, predict = 0) {
     height: imgData.height
   }
 }
-
+function encode_predict(imgData, qu) {
+  return encode(imgData, qu,1)
+}
 // helper function to get the imageData of an existing image on the current page.
 function getImageDataFromImage(idOrElement) {
   var theImg =

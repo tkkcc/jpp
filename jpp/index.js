@@ -1,7 +1,8 @@
-const encode = require('./encoder'),
+const { encode, encode_predict } = require('./encoder'),
   decode = require('./decoder')
 
 module.exports = {
   encode,
-  decode
+  decode,
+  encode_predict
 }
