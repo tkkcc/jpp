@@ -1,0 +1,11 @@
+/node_modules
+/.vscode
+/test
+/index.js
+/test.html
+/*.jpp
+/*.jpg
+/*.rgba
+/*.tiff
+/1.js
+/2.js

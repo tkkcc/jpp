@@ -1,0 +1,8 @@
+{
+  "devDependencies": {
+    "utif": "^2.0.1"
+  },
+  "dependencies": {
+    "canvas": "^2.0.1"
+  }
+}
