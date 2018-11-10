@@ -641,6 +641,8 @@ var JpegImage = (function jpegImage() {
         var data = component.blocks[blockRow][blockCol]
         quantizeAndInverse(data, r, R)
         if (predictFlag) {
+          if (pindex===314)
+          console.log()
           var rr = predict(
             r,
             blocks,
@@ -650,6 +652,9 @@ var JpegImage = (function jpegImage() {
             true,
             1
           )
+          // if (rr === undefined) {
+          //   console.log(modes[pindex-1])
+          // }
           for (let i = 0; i < 64; ++i) rr[i] -= 128
           blocks.push(rr)
           for (let i = 0; i < 64; ++i) {
@@ -690,6 +695,7 @@ var JpegImage = (function jpegImage() {
       xhr.send(null)
     },
     parse: function parse(data) {
+      modes=[]
       var offset = 0,
         length = data.length
       function readUint16() {

@@ -49,8 +49,9 @@ function encoder({
     capacity -= 1
     if (capacity === 0) {
       code.push(buffer)
-      if (code.length % 100000===0) {
-        console.log(code.length)
+      if (code.length > 10000000) {
+        throw 'too long'
+        // console.log(code.length)
       }
       capacity = 8
     }

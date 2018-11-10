@@ -48,7 +48,7 @@ const ddl = (data, top) => {
 }
 
 const ddr = (data, top, left, corner) => {
-  if (!top || !left || !corner) return
+  if (!top || !left || corner===undefined) return
 
   data[0] = (top[0] + 2 * corner + left[0] + 2) >> 2
   data[1] = (corner + 2 * top[0] + top[1] + 2) >> 2
@@ -71,7 +71,7 @@ const ddr = (data, top, left, corner) => {
 }
 
 const vr = (data, top, left, corner) => {
-  if (!top || !left || !corner) return
+  if (!top || !left || corner===undefined) return
 
   data[0] = (corner + top[0] + 1) >> 1
   data[1] = (top[0] + top[1] + 1) >> 1
@@ -103,7 +103,7 @@ const vr = (data, top, left, corner) => {
 }
 
 const hd = (data, top, left, corner) => {
-  if (!top || !left || !corner) return
+  if (!top || !left || corner===undefined) return
 
   data[0] = (corner + left[0] + 1) >> 1
   data[1] = (top[0] + 2 * corner + left[0] + 2) >> 2

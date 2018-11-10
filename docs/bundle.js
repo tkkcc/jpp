@@ -3860,8 +3860,9 @@ function encoder({
     capacity -= 1
     if (capacity === 0) {
       code.push(buffer)
-      if (code.length % 100000===0) {
-        console.log(code.length)
+      if (code.length > 10000000) {
+        throw 'too long'
+        // console.log(code.length)
       }
       capacity = 8
     }
@@ -4636,6 +4637,8 @@ var JpegImage = (function jpegImage() {
         var data = component.blocks[blockRow][blockCol]
         quantizeAndInverse(data, r, R)
         if (predictFlag) {
+          if (pindex===314)
+          console.log()
           var rr = predict(
             r,
             blocks,
@@ -4645,6 +4648,9 @@ var JpegImage = (function jpegImage() {
             true,
             1
           )
+          // if (rr === undefined) {
+          //   console.log(modes[pindex-1])
+          // }
           for (let i = 0; i < 64; ++i) rr[i] -= 128
           blocks.push(rr)
           for (let i = 0; i < 64; ++i) {
@@ -4685,6 +4691,7 @@ var JpegImage = (function jpegImage() {
       xhr.send(null)
     },
     parse: function parse(data) {
+      modes=[]
       var offset = 0,
         length = data.length
       function readUint16() {
@@ -6817,7 +6824,7 @@ function JPEGEncoder(quality, predictFlag) {
 
   init()
 }
-module.exports = encode
+module.exports = { encode, encode_predict }
 
 function encode(imgData, qu, predict = 0) {
   if (typeof qu === 'undefined') qu = 50
@@ -6829,7 +6836,9 @@ function encode(imgData, qu, predict = 0) {
     height: imgData.height
   }
 }
-
+function encode_predict(imgData, qu) {
+  return encode(imgData, qu,1)
+}
 // helper function to get the imageData of an existing image on the current page.
 function getImageDataFromImage(idOrElement) {
   var theImg =
@@ -6897,7 +6906,7 @@ const ddl = (data, top) => {
 }
 
 const ddr = (data, top, left, corner) => {
-  if (!top || !left || !corner) return
+  if (!top || !left || corner===undefined) return
 
   data[0] = (top[0] + 2 * corner + left[0] + 2) >> 2
   data[1] = (corner + 2 * top[0] + top[1] + 2) >> 2
@@ -6920,7 +6929,7 @@ const ddr = (data, top, left, corner) => {
 }
 
 const vr = (data, top, left, corner) => {
-  if (!top || !left || !corner) return
+  if (!top || !left || corner===undefined) return
 
   data[0] = (corner + top[0] + 1) >> 1
   data[1] = (top[0] + top[1] + 1) >> 1
@@ -6952,7 +6961,7 @@ const vr = (data, top, left, corner) => {
 }
 
 const hd = (data, top, left, corner) => {
-  if (!top || !left || !corner) return
+  if (!top || !left || corner===undefined) return
 
   data[0] = (corner + left[0] + 1) >> 1
   data[1] = (top[0] + 2 * corner + left[0] + 2) >> 2
@@ -7109,12 +7118,13 @@ module.exports = {
 };
 
 },{"./decoder":4,"./encoder":5}],"jpp":[function(require,module,exports){
-const encode = require('./encoder'),
+const { encode, encode_predict } = require('./encoder'),
   decode = require('./decoder')
 
 module.exports = {
   encode,
-  decode
+  decode,
+  encode_predict
 }
 
 },{"./decoder":7,"./encoder":8}]},{},[]);

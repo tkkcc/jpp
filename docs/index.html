@@ -30,21 +30,48 @@
     <!-- encode use jpg + aac(adaptive arithmetic codec) + predict -->
     <style>
       div#main {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+
         /* text-align: center; */
         /* justify-content: center */
       }
     </style>
 
-    <div id="main">
+    <div>
       <h1>jpg based image codec in browser and node</h1>
-      <h2>jpg + [[adaptive arithmetic codec] + predict]</h2>
-      <a href="https://tkkcc.github.io/jpp/docs">live demo</a>
-      <a href="https://github.com/tkkcc/jpp">code</a>
+
+      <h2>
+        jpg + [[adaptive arithmetic codec] + predict]
+        <a href="https://tkkcc.github.io/jpp/docs">live demo</a>
+        <a href="https://github.com/tkkcc/jpp">code</a>
+      </h2>
       <p>flow: load rgba file ==encode=> jpg/jpp ==decode=> rgba display</p>
       <!-- <span>quality</span> <input type="range" id="quality" /> -->
     </div>
-    <canvas></canvas>
+    <!-- file choose -->
+    <!-- <div> -->
+    <!--
+      <button>
+        <label for="file" class="btn">select jpg file</label>
+        <input type="file" id="file" style="display:none"/>
+      </button>
+    -->
+    <!-- </div> -->
+    <!-- <br> -->
+    <span>quality: </span> <input type="number" min="1" step="1" id="quality" />
+    <p>result:</p>
     <pre></pre>
+
+    <div id="main">
+      <p id="p0">origin rgba</p>
+      <p id="p1">jpg</p>
+      <canvas></canvas> <canvas></canvas>
+      <p id="p2">jpg+aac</p>
+      <p id="p3">jpg+aac+predict</p>
+      <canvas></canvas> <canvas></canvas>
+    </div>
+
     <script src="bundle.js"></script>
     <script src="main.js"></script>
   </body>

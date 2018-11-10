@@ -12,7 +12,7 @@ const psnr = (a, b) => {
 const rgba2rgb = i => i.filter((_, i) => i % 4 !== 3)
 
 // available test data: lena, black
-const lena = { file: 'lena512color', width: 512, height: 501, quality: 40 }
+const lena = { file: 'lena512color', width: 512, height: 501, quality: 41 }
 const black = { file: 'black', width: 64, height: 64, quality: 80 }
 // choose lenna
 const { width, height, file, quality } = lena
@@ -59,6 +59,9 @@ let [t1, t2, t3, t4] = [a, j, p0, p1].map(rgba2rgb)
 console.log(
   p('psnr(db)') + p(f(psnr(t1, t2))) + p(f(psnr(t1, t3))) + p(f(psnr(t1, t4)))
 )
+
+// p1 = jpp.encode({ data: a, width, height }, quality-10, true).data
+// p1 = jpp.decode(p1).data
 
 // show in html format, need canvas dependency
 try {
