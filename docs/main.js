@@ -54,7 +54,7 @@ const main = async () => {
 
   const pad = 18
   const p = (i = '') => i.padStart(pad, ' ')
-  const f = i => i.toFixed(2).padStart(pad, ' ')
+  const f = i => i.toFixed(3).padStart(pad, ' ')
   log(p() + p('jpg') + p('jpg+aac') + p('jpg+aac+predict'))
   log(p('quality') + p(f(quality)) + p(f(quality)) + p(f(quality * 1.1)), true)
   log(
@@ -111,7 +111,7 @@ const main = async () => {
 // )
 input.addEventListener('keyup', e => {
   if (e.keyCode === 13) {
-    if (input.value > 50) input.value = 50
+    if (input.value > 55) input.value = 55
     else if (input.value < 1) input.value = 1
     quality = parseInt(input.value)
     main()

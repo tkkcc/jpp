@@ -3870,13 +3870,7 @@ function encoder({
   const outputLast = () => {
     code.push(buffer >> capacity)
   }
-  const output = bit => {
-    outputBit(bit)
-    while (follow > 0) {
-      outputBit(bit ^ 1)
-      follow--
-    }
-  }
+
   const encodeFinish = () => {
     // encodeSymbol(eof)
     follow += 1
@@ -3884,9 +3878,14 @@ function encoder({
     else output(1)
     outputLast()
   }
-
+  const output = bit => {
+    outputBit(bit)
+    while (follow > 0) {
+      outputBit(bit ^ 1)
+      follow--
+    }
+  }
   const encodeSymbol = symbol => {
-    // if(symbol===0)  throw 'symbol can\'t be 0'
     symbol+=1
     let range = high - low + 1
     high = (low + (range * cum[symbol - 1]) / cum[0] - 1) >>> 0
@@ -4206,7 +4205,7 @@ var JpegImage = (function jpegImage() {
     }
     function decodeBaseline(component, zz, DCAT, ACAT, yuv) {
       if (predictFlag && yuv === 0) {
-        const mode = DCAT.decodeSymbol() - 1
+        const mode = DCAT.decodeSymbol()
         modes.push(mode)
       }
       var t = DCAT.decodeSymbol()
@@ -6528,8 +6527,8 @@ function JPEGEncoder(quality, predictFlag) {
       const tmp = new Int32Array(64)
       const dataout = new Int16Array(64)
       quantizeAndInverse(DU_DCT, iQT, dataout, tmp)
-      for (let i = 0; i < 64; ++i){
-        dataout[i]-=128
+      for (let i = 0; i < 64; ++i) {
+        dataout[i] -= 128
       }
       blocks.push(predict(dataout, blocks, row, mode, 0, true))
     }
@@ -6544,7 +6543,8 @@ function JPEGEncoder(quality, predictFlag) {
     } else {
       pos = 32767 + Diff
       DCAT.encodeSymbol(category[pos])
-      if (!predicting) poss.push(pos)
+      // if (!predicting)
+      poss.push(pos)
     }
     //Encode ACs
     var end0pos = 63 // was const... which is crazy
@@ -6569,7 +6569,8 @@ function JPEGEncoder(quality, predictFlag) {
       }
       pos = 32767 + DU[i]
       ACAT.encodeSymbol((nrzeroes << 4) + category[pos])
-      if (!predicting) poss.push(pos)
+      // if (!predicting)
+      poss.push(pos)
       i++
     }
     if (end0pos != I63) {
@@ -6693,39 +6694,44 @@ function JPEGEncoder(quality, predictFlag) {
           //predicting = true
           // 4 encoder parameters
           const save = at.map(i => i.save())
-          min = 0
+          let min = 1 << 50
+          const calcsum = (at, poss) =>
+            at.reduce((a, c) => a + c.length(), 0) +0
+            // poss.reduce((a, c) => a + bitcode[c][1], 0)
+          const poss_ = poss
           for (let i = 0; i < 9; ++i) {
+            poss = []
             const test = save.map(i => AAC.encoder(i))
             let [ydcat, yacat, uvdcat, uvacat] = test
             let [yy, uu, vv] = [YDU, UDU, VDU].map((x, index) =>
               predict(x, blocks, row_length, i, index)
             )
-            if (!yy||!uu||!vv) continue
+            if (!yy || !uu || !vv) continue
             processDU(yy, fdtbl_Y, YDC, ydcat, yacat, nzzYTable, {
               predicting: true
             })
+            if (calcsum(test,poss) >= min) continue
             processDU(uu, fdtbl_UV, UDC, uvdcat, uvacat, nzzUVTable, {
               predicting: true
             })
+            if (calcsum(test,poss) >= min) continue
             processDU(vv, fdtbl_UV, VDC, uvdcat, uvacat, nzzUVTable, {
               predicting: true
             })
-            const sum = test.reduce((a, c) => {
-              // c.encodeFinish()
-              return a + c.length()
-            }, 0)
-            if (sum < min || min === 0) {
+            const sum = calcsum(test,poss)
+            if (sum < min) {
               bestMode = i
               min = sum
             }
           }
+          poss = poss_
           //predicting = false
           // if (!(x===0&&y===0))
           // bestMode = 0
           ;[YDU, UDU, VDU] = [YDU, UDU, VDU].map((x, index) =>
             predict(x, blocks, row_length, bestMode, index)
           )
-          YDCAT.encodeSymbol(bestMode + 1)
+          YDCAT.encodeSymbol(bestMode)
         }
         YDC = processDU(YDU, fdtbl_Y, YDC, YDCAT, YACAT, nzzYTable, {
           mode: bestMode,
@@ -6747,16 +6753,10 @@ function JPEGEncoder(quality, predictFlag) {
     writeByte(predictFlag)
     // write YDCAT, YACAT, UVDCAT, UVACAT
     at.forEach(i => {
-      // i.encodeSymbol(258)
       i.encodeFinish()
       writeWord(i.code.length)
       writeBytes(i.code)
-      // let t = AAC.decoder(i.code)
-      // let y = t.decodeSymbol()
-      // let x = t.decodeSymbol()
-      // console.log(y, x, i.code.length)
     })
-    // console.log(byteout.length)
     poss.forEach(i => writeBits(bitcode[i]))
     // console.log(byteout.length)
 
@@ -6837,7 +6837,7 @@ function encode(imgData, qu, predict = 0) {
   }
 }
 function encode_predict(imgData, qu) {
-  return encode(imgData, qu,1)
+  return encode(imgData, qu, 1)
 }
 // helper function to get the imageData of an existing image on the current page.
 function getImageDataFromImage(idOrElement) {
@@ -6870,6 +6870,7 @@ const h = (data, left) => {
 }
 
 const dc = (data, top, left) => {
+  if (top) top = top.slice(0, 8)
   let v
   if (top && left) {
     v = (top.reduce((a, c) => a + c) + left.reduce((a, c) => a + c) + 8) >> 4
@@ -6877,8 +6878,7 @@ const dc = (data, top, left) => {
     v = (top.reduce((a, c) => a + c) + 4) >> 3
   } else if (left) {
     v = (left.reduce((a, c) => a + c) + 4) >> 3
-  } else 
-    v=0
+  } else v = 0
   for (let i = 0; i < 64; ++i) data[i] = v
 }
 
@@ -6906,7 +6906,7 @@ const ddl = (data, top) => {
 }
 
 const ddr = (data, top, left, corner) => {
-  if (!top || !left || corner===undefined) return
+  if (!top || !left || corner === undefined) return
 
   data[0] = (top[0] + 2 * corner + left[0] + 2) >> 2
   data[1] = (corner + 2 * top[0] + top[1] + 2) >> 2
@@ -6929,7 +6929,7 @@ const ddr = (data, top, left, corner) => {
 }
 
 const vr = (data, top, left, corner) => {
-  if (!top || !left || corner===undefined) return
+  if (!top || !left || corner === undefined) return
 
   data[0] = (corner + top[0] + 1) >> 1
   data[1] = (top[0] + top[1] + 1) >> 1
@@ -6961,7 +6961,7 @@ const vr = (data, top, left, corner) => {
 }
 
 const hd = (data, top, left, corner) => {
-  if (!top || !left || corner===undefined) return
+  if (!top || !left || corner === undefined) return
 
   data[0] = (corner + left[0] + 1) >> 1
   data[1] = (top[0] + 2 * corner + left[0] + 2) >> 2
@@ -7038,7 +7038,6 @@ const hu = (data, left) => {
   data[33] = (left[4] + 2 * left[5] + left[6] + 2) >> 2
   data[40] = (left[5] + left[6] + 1) >> 1
   data[41] = (left[5] + 2 * left[6] + left[7] + 2) >> 2
-
   data[48] = (left[6] + left[7] + 1) >> 1
   data[49] = (left[6] + 3 * left[7] + 2) >> 2
   data[56] = data[57] = data[58] = data[59] = data[60] = data[61] = data[62] = data[63] =
@@ -7048,7 +7047,7 @@ const hu = (data, left) => {
     for (let j = 2; j < 8; ++j) data[i * 8 + j] = data[(i + 1) * 8 + j - 2]
 }
 
-function predict(data, blocks, row, mode, yuv, inverse = false,step=3) {
+function predict(data, blocks, row, mode, yuv, inverse = false, step = 3) {
   // const t = new Int16Array(64)
   const t = Array(64)
   const index = blocks.length + yuv
@@ -7059,7 +7058,7 @@ function predict(data, blocks, row, mode, yuv, inverse = false,step=3) {
   if (index % row >= step)
     left = [7, 15, 23, 31, 39, 47, 55, 63].map(i => blocks[index - step][i])
   // not top and not right
-  if (index >= row && (index % row) + step < row) {
+  if (index >= row && (!(mode in [3, 7]) || (index % row) + step < row)) {
     let a = blocks[index - row].slice(56)
     let b = blocks[index - row + step].slice(56)
     top = new Int16Array(16)
@@ -7101,7 +7100,7 @@ function predict(data, blocks, row, mode, yuv, inverse = false,step=3) {
       break
   }
   // mode not available
-  if (t[0]===undefined) return
+  if (t[0] === undefined) return
   if (inverse) for (let i = 0; i < 64; ++i) t[i] = data[i] + t[i]
   else for (let i = 0; i < 64; ++i) t[i] = data[i] - t[i]
   return t

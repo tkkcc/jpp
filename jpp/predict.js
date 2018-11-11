@@ -12,6 +12,7 @@ const h = (data, left) => {
 }
 
 const dc = (data, top, left) => {
+  if (top) top = top.slice(0, 8)
   let v
   if (top && left) {
     v = (top.reduce((a, c) => a + c) + left.reduce((a, c) => a + c) + 8) >> 4
@@ -19,8 +20,7 @@ const dc = (data, top, left) => {
     v = (top.reduce((a, c) => a + c) + 4) >> 3
   } else if (left) {
     v = (left.reduce((a, c) => a + c) + 4) >> 3
-  } else 
-    v=0
+  } else v = 0
   for (let i = 0; i < 64; ++i) data[i] = v
 }
 
@@ -48,7 +48,7 @@ const ddl = (data, top) => {
 }
 
 const ddr = (data, top, left, corner) => {
-  if (!top || !left || corner===undefined) return
+  if (!top || !left || corner === undefined) return
 
   data[0] = (top[0] + 2 * corner + left[0] + 2) >> 2
   data[1] = (corner + 2 * top[0] + top[1] + 2) >> 2
@@ -71,7 +71,7 @@ const ddr = (data, top, left, corner) => {
 }
 
 const vr = (data, top, left, corner) => {
-  if (!top || !left || corner===undefined) return
+  if (!top || !left || corner === undefined) return
 
   data[0] = (corner + top[0] + 1) >> 1
   data[1] = (top[0] + top[1] + 1) >> 1
@@ -103,7 +103,7 @@ const vr = (data, top, left, corner) => {
 }
 
 const hd = (data, top, left, corner) => {
-  if (!top || !left || corner===undefined) return
+  if (!top || !left || corner === undefined) return
 
   data[0] = (corner + left[0] + 1) >> 1
   data[1] = (top[0] + 2 * corner + left[0] + 2) >> 2
@@ -180,7 +180,6 @@ const hu = (data, left) => {
   data[33] = (left[4] + 2 * left[5] + left[6] + 2) >> 2
   data[40] = (left[5] + left[6] + 1) >> 1
   data[41] = (left[5] + 2 * left[6] + left[7] + 2) >> 2
-
   data[48] = (left[6] + left[7] + 1) >> 1
   data[49] = (left[6] + 3 * left[7] + 2) >> 2
   data[56] = data[57] = data[58] = data[59] = data[60] = data[61] = data[62] = data[63] =
@@ -190,7 +189,7 @@ const hu = (data, left) => {
     for (let j = 2; j < 8; ++j) data[i * 8 + j] = data[(i + 1) * 8 + j - 2]
 }
 
-function predict(data, blocks, row, mode, yuv, inverse = false,step=3) {
+function predict(data, blocks, row, mode, yuv, inverse = false, step = 3) {
   // const t = new Int16Array(64)
   const t = Array(64)
   const index = blocks.length + yuv
@@ -201,7 +200,7 @@ function predict(data, blocks, row, mode, yuv, inverse = false,step=3) {
   if (index % row >= step)
     left = [7, 15, 23, 31, 39, 47, 55, 63].map(i => blocks[index - step][i])
   // not top and not right
-  if (index >= row && (index % row) + step < row) {
+  if (index >= row && (!(mode in [3, 7]) || (index % row) + step < row)) {
     let a = blocks[index - row].slice(56)
     let b = blocks[index - row + step].slice(56)
     top = new Int16Array(16)
@@ -243,7 +242,7 @@ function predict(data, blocks, row, mode, yuv, inverse = false,step=3) {
       break
   }
   // mode not available
-  if (t[0]===undefined) return
+  if (t[0] === undefined) return
   if (inverse) for (let i = 0; i < 64; ++i) t[i] = data[i] + t[i]
   else for (let i = 0; i < 64; ++i) t[i] = data[i] - t[i]
   return t

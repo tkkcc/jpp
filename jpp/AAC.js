@@ -59,13 +59,7 @@ function encoder({
   const outputLast = () => {
     code.push(buffer >> capacity)
   }
-  const output = bit => {
-    outputBit(bit)
-    while (follow > 0) {
-      outputBit(bit ^ 1)
-      follow--
-    }
-  }
+
   const encodeFinish = () => {
     // encodeSymbol(eof)
     follow += 1
@@ -73,9 +67,14 @@ function encoder({
     else output(1)
     outputLast()
   }
-
+  const output = bit => {
+    outputBit(bit)
+    while (follow > 0) {
+      outputBit(bit ^ 1)
+      follow--
+    }
+  }
   const encodeSymbol = symbol => {
-    // if(symbol===0)  throw 'symbol can\'t be 0'
     symbol+=1
     let range = high - low + 1
     high = (low + (range * cum[symbol - 1]) / cum[0] - 1) >>> 0

@@ -12,7 +12,7 @@ const psnr = (a, b) => {
 const rgba2rgb = i => i.filter((_, i) => i % 4 !== 3)
 
 // available test data: lena, black
-const lena = { file: 'lena512color', width: 512, height: 501, quality: 41 }
+const lena = { file: 'lena512color', width: 512, height: 512, quality: 12 }
 const black = { file: 'black', width: 64, height: 64, quality: 80 }
 // choose lenna
 const { width, height, file, quality } = lena
@@ -27,7 +27,7 @@ let j = jpg.encode({ data: a, width, height }, quality) // jpg
 // encode use jpg + aac(adaptive arithmetic codec)
 let p0 = jpp.encode({ data: a, width, height }, quality) // jpg + aac
 // encode use jpg + aac(adaptive arithmetic codec) + predict
-let p1 = jpp.encode({ data: a, width, height }, quality*1.1, true) // jpg + aac + predict
+let p1 = jpp.encode({ data: a, width, height }, quality*1.7, true) // jpg + aac + predict
 // write to disk
 fs.writeFileSync(file + '.jpg', j.data)
 fs.writeFileSync(file + '_aac.jpp', p0.data)
@@ -42,7 +42,7 @@ p1 = fs.readFileSync(file + '_aac_predict.jpp')
 // fs.writeFileSync('lena512color.jpg', b.data)
 const pad = 18
 const p = (i = '') => i.padStart(pad, ' ')
-const f = i => i.toFixed(2).padStart(pad, ' ')
+const f = i => i.toFixed(3).padStart(pad, ' ')
 console.log(p() + p('jpg') + p('jpg+aac') + p('jpg+aac+predict'))
 console.log(
   p('size/jpg') +

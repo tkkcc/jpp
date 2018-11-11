@@ -210,7 +210,7 @@ var JpegImage = (function jpegImage() {
     }
     function decodeBaseline(component, zz, DCAT, ACAT, yuv) {
       if (predictFlag && yuv === 0) {
-        const mode = DCAT.decodeSymbol() - 1
+        const mode = DCAT.decodeSymbol()
         modes.push(mode)
       }
       var t = DCAT.decodeSymbol()

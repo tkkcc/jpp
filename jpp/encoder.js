@@ -1285,8 +1285,8 @@ function JPEGEncoder(quality, predictFlag) {
       const tmp = new Int32Array(64)
       const dataout = new Int16Array(64)
       quantizeAndInverse(DU_DCT, iQT, dataout, tmp)
-      for (let i = 0; i < 64; ++i){
-        dataout[i]-=128
+      for (let i = 0; i < 64; ++i) {
+        dataout[i] -= 128
       }
       blocks.push(predict(dataout, blocks, row, mode, 0, true))
     }
@@ -1301,7 +1301,8 @@ function JPEGEncoder(quality, predictFlag) {
     } else {
       pos = 32767 + Diff
       DCAT.encodeSymbol(category[pos])
-      if (!predicting) poss.push(pos)
+      // if (!predicting)
+      poss.push(pos)
     }
     //Encode ACs
     var end0pos = 63 // was const... which is crazy
@@ -1326,7 +1327,8 @@ function JPEGEncoder(quality, predictFlag) {
       }
       pos = 32767 + DU[i]
       ACAT.encodeSymbol((nrzeroes << 4) + category[pos])
-      if (!predicting) poss.push(pos)
+      // if (!predicting)
+      poss.push(pos)
       i++
     }
     if (end0pos != I63) {
@@ -1450,39 +1452,44 @@ function JPEGEncoder(quality, predictFlag) {
           //predicting = true
           // 4 encoder parameters
           const save = at.map(i => i.save())
-          min = 0
+          let min = 1 << 50
+          const calcsum = (at, poss) =>
+            at.reduce((a, c) => a + c.length(), 0) +0
+            // poss.reduce((a, c) => a + bitcode[c][1], 0)
+          const poss_ = poss
           for (let i = 0; i < 9; ++i) {
+            poss = []
             const test = save.map(i => AAC.encoder(i))
             let [ydcat, yacat, uvdcat, uvacat] = test
             let [yy, uu, vv] = [YDU, UDU, VDU].map((x, index) =>
               predict(x, blocks, row_length, i, index)
             )
-            if (!yy||!uu||!vv) continue
+            if (!yy || !uu || !vv) continue
             processDU(yy, fdtbl_Y, YDC, ydcat, yacat, nzzYTable, {
               predicting: true
             })
+            if (calcsum(test,poss) >= min) continue
             processDU(uu, fdtbl_UV, UDC, uvdcat, uvacat, nzzUVTable, {
               predicting: true
             })
+            if (calcsum(test,poss) >= min) continue
             processDU(vv, fdtbl_UV, VDC, uvdcat, uvacat, nzzUVTable, {
               predicting: true
             })
-            const sum = test.reduce((a, c) => {
-              // c.encodeFinish()
-              return a + c.length()
-            }, 0)
-            if (sum < min || min === 0) {
+            const sum = calcsum(test,poss)
+            if (sum < min) {
               bestMode = i
               min = sum
             }
           }
+          poss = poss_
           //predicting = false
           // if (!(x===0&&y===0))
           // bestMode = 0
           ;[YDU, UDU, VDU] = [YDU, UDU, VDU].map((x, index) =>
             predict(x, blocks, row_length, bestMode, index)
           )
-          YDCAT.encodeSymbol(bestMode + 1)
+          YDCAT.encodeSymbol(bestMode)
         }
         YDC = processDU(YDU, fdtbl_Y, YDC, YDCAT, YACAT, nzzYTable, {
           mode: bestMode,
@@ -1504,16 +1511,10 @@ function JPEGEncoder(quality, predictFlag) {
     writeByte(predictFlag)
     // write YDCAT, YACAT, UVDCAT, UVACAT
     at.forEach(i => {
-      // i.encodeSymbol(258)
       i.encodeFinish()
       writeWord(i.code.length)
       writeBytes(i.code)
-      // let t = AAC.decoder(i.code)
-      // let y = t.decodeSymbol()
-      // let x = t.decodeSymbol()
-      // console.log(y, x, i.code.length)
     })
-    // console.log(byteout.length)
     poss.forEach(i => writeBits(bitcode[i]))
     // console.log(byteout.length)
 
@@ -1594,7 +1595,7 @@ function encode(imgData, qu, predict = 0) {
   }
 }
 function encode_predict(imgData, qu) {
-  return encode(imgData, qu,1)
+  return encode(imgData, qu, 1)
 }
 // helper function to get the imageData of an existing image on the current page.
 function getImageDataFromImage(idOrElement) {
